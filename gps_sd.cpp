@@ -67,3 +67,35 @@ void gps_sd_update(double sensors_data[3]) {
     Serial.println("No GPS data");
   }
 }
+
+void gps_sd_save_now(double sensors_data[3]) {
+ 
+  while (ssgps.available()) {
+    gps.encode(ssgps.read());
+  }
+
+  if (gps.location.isValid()) {
+    float dist = 0.0;
+
+    file.print(gps.location.lat(), 6);
+    file.print(",");
+    file.print(gps.location.lng(), 6);
+    file.print(",");
+    file.print(gps.speed.kmph());
+    file.print(",");
+    file.print(gps.altitude.meters());
+    file.print(",");
+    file.print(sensors_data[0]);
+    file.print(",");
+    file.print(sensors_data[1]);
+    file.print(",");
+    file.print(sensors_data[2]);
+    file.print(",");
+    file.println(dist);
+    file.flush();
+    Serial.println("Manual save triggered");
+  } else {
+    Serial.println("No GPS fix — cannot save");
+  }
+}
+}

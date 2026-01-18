@@ -2,15 +2,13 @@
 #include <SoftwareSerial.h>
 #include <Arduino.h>
 #include "sensors.h"
+#include "wheels.h"
 
 SoftwareSerial wifiSerial(15, 14);
 static bool destination_set = false;
 static double dest_lat = 0.0, dest_lon = 0.0;
 
-// Объявления внешних переменных
-extern File file;
-extern TinyGPS gps;
-extern SoftwareSerial ssgps;
+static bool save_requested = false;
 
 void send_at_command(const char* cmd, unsigned long timeout) {
   wifiSerial.println(cmd);
@@ -67,29 +65,9 @@ void wifi_handle_incoming_commands() {
       Serial.println(motor_cmd);
       handle_wheel_command(motor_cmd); // ← исправлено!
     }
-    else if (cmd == "SAVE_NOW") {
-      double sens[3];
-      sensors_read(sens);
-      float dist = read_ultrasonic_cm();
-      if (gps.location.isValid()) {
-        file.print(gps.location.lat(), 6);
-        file.print(",");
-        file.print(gps.location.lng(), 6);
-        file.print(",");
-        file.print(gps.speed.kmph());
-        file.print(",");
-        file.print(gps.altitude.meters());
-        file.print(",");
-        file.print(sens[0]);
-        file.print(",");
-        file.print(sens[1]);
-        file.print(",");
-        file.print(sens[2]);
-        file.print(",");
-        file.println(dist);
-        file.flush();
-        Serial.println("Manual save triggered");
-      }
+    else if (cmd == "SAVE_NOW"){
+        save_requested=true;
+        Serial.println("Save requested via WiFi");
     }
     else if (cmd.startsWith("SET_DEST:")) {
       int sep = cmd.indexOf(',');
@@ -135,4 +113,12 @@ void wifi_request_destination(double* lat, double* lon) {
     *lon = dest_lon;
     destination_set = false;
   }
+}
+
+bool wifi_should_save_now(){
+    return save_requested;
+}
+
+void wifi_clear_save_flag(){
+    save_requested = false;
 }

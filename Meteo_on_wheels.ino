@@ -57,6 +57,11 @@ void loop() {
     // Обрабатываем команды, пришедшие от Wi-Fi модуля (ESP8266)
     wifi_handle_incoming_commands();
 
+    if (wifi_should_save_now()) {
+      gps_sd_save_now(sensors_data);
+      wifi_clear_save_flag();
+    }
+
   } else {
     // --- РЕЖИМ Bluetooth ---
     digitalWrite(LED_BUILTIN, LOW); // Индикатор: Bluetooth активен
