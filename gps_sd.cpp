@@ -25,8 +25,6 @@ void gps_sd_init() {
 
 void gps_sd_update(double sensors_data[3]) {
     static unsigned long last_save = 0;
-    if (millis() - last_save >= 60000) {
-      last_save = millis();
       float dist = read_ultrasonic_cm();
       file.print(sensors_data[0]);
       file.print(",");
@@ -36,10 +34,6 @@ void gps_sd_update(double sensors_data[3]) {
       file.print(",");
       file.println(dist);
       file.flush();
-    }
-    else {
-    Serial.println("No GPS data");
-  }
 }
 
 void gps_sd_save_now(double sensors_data[3]) {
