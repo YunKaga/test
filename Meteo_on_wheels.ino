@@ -8,7 +8,7 @@
 
 // Bluetooth settings
 SoftwareSerial bluetooth(0, 1); // RX, TX
-byte State = 7;
+const byte STATE_PIN = 7;
 char data = '0';
 
 // Speed
@@ -19,9 +19,8 @@ void setup() {
 
   Serial.begin(9600);
   bluetooth.begin(38400);
-  pinMode(State, INPUT);
+  pinMode(STATE_PIN, INPUT);
 
-  ultrasonic_init();
   wheels_init(Ena);
   sensors_init();
   gps_sd_init();
@@ -31,47 +30,23 @@ void setup() {
 void loop() {
   static double sensors_data[3];
 
-  double gps_lat = 0.0, gps_lon = 0.0;
-  float gps_speed = 0.0, gps_alt = 0.0;
-
   sensors_read(sensors_data);
 
-  if (gps_get_valid_data(&gps_lat, &gps_lon, &gps_speed, &gps_alt)) {
-    wifi_send_data(sensors_data, gps_lat, gps_lon, gps_speed, gps_alt);
+  wifi_send_data(sensors_data);
 
-    double dest_lat, dest_lon;
-    if (wifi_has_destination()) {
-      wifi_request_destination(&dest_lat, &dest_lon);
-      Serial.print("Navigate to: ");
-      Serial.print(dest_lat, 6);
-      Serial.print(", ");
-      Serial.println(dest_lon, 6);
-    }
+if (digitalRead(State)) {
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  wifi_handle_incoming_commands();
+
+} else {
+ 
+  digitalWrite(LED_BUILTIN, LOW);
+
+  if (bluetooth.available()) {
+    char cmd = bluetooth.read();
+    handle_wheel_command(cmd);
   }
-
-  // Проверяем, в каком режиме работаем
-  if (digitalRead(STATE_PIN)) {
-    // --- РЕЖИМ Wi-Fi ---
-    digitalWrite(LED_BUILTIN, HIGH); // Индикатор: Wi-Fi активен
-
-    // Обрабатываем команды, пришедшие от Wi-Fi модуля (ESP8266)
-    wifi_handle_incoming_commands();
-
-    if (wifi_should_save_now()) {
-      gps_sd_save_now(sensors_data);
-      wifi_clear_save_flag();
-    }
-
-  } else {
-    // --- РЕЖИМ Bluetooth ---
-    digitalWrite(LED_BUILTIN, LOW); // Индикатор: Bluetooth активен
-
-    // Обрабатываем команды, пришедшие по Bluetooth
-    if (bluetooth.available()) {
-      char cmd = bluetooth.read();
-      // Передаём команду в модуль управления моторами
-      handle_motor_command(cmd); // Эта функция из motors.cpp
-    }
-  }
-  gps_sd_update(sensors_data);
+}
+gps_sd_update(sensors_data);
 }
