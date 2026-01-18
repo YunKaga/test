@@ -8,7 +8,6 @@ const byte CS_PIN = 29;
 const char* FILE_NAME = "sensors_data.csv";
 
 void gps_sd_init() {
-  ssgps.begin(9600);
   if (!SD.begin(CS_PIN)) {
     Serial.println("SD init failed");
   }
@@ -48,14 +47,6 @@ void gps_sd_save_now(double sensors_data[3]) {
     if (file){
     float dist = 0.0;
 
-    file.print(gps.location.lat(), 6);
-    file.print(",");
-    file.print(gps.location.lng(), 6);
-    file.print(",");
-    file.print(gps.speed.kmph());
-    file.print(",");
-    file.print(gps.altitude.meters());
-    file.print(",");
     file.print(sensors_data[0]);
     file.print(",");
     file.print(sensors_data[1]);
