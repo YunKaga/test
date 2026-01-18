@@ -34,7 +34,7 @@ void loop() {
 
   wifi_send_data(sensors_data);
 
-if (digitalRead(State)) {
+if (digitalRead(STATE_PIN)) {
   digitalWrite(LED_BUILTIN, HIGH);
 
   wifi_handle_incoming_commands();
